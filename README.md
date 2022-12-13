@@ -1,2 +1,6 @@
-# cmdb_ppin_demo
-This repository demonstrates how to use the CMDB and PPIN APIs to generate correlation matrix datasets, graph networks and then visualize them using heatmaps and graph networks in High Charts.
+# Vector Space Biosciences
+This repository includes a notebook which demonstrates the following:
+- How to call the Correlation Matrix Dataset Builder (CMDB) API
+- How to generate a heatmap with High Charts using data from the correlation matrix dataset generated
+- How to use the Protein-Protein Interaction Network (PPIN) API
+- How to generate a network graph with High Charts using data returned from the network
