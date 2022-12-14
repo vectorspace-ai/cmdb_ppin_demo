@@ -66,6 +66,9 @@
                         marginBottom: 80,
                         plotBorderWidth: 1
                     },
+                    boost: {
+                        useGPUTranslations: true
+                    },
                     title: {
                         text: 'Heatmap'
                     },
@@ -103,7 +106,7 @@
                         margin: 0,
                         verticalAlign: 'top',
                         y: 25,
-                        symbolHeight: 280
+                        symbolHeight: vsb_placeholder_heatmap_legend_height
                     },
                     tooltip: {
                         formatter: function () {
@@ -117,7 +120,11 @@
                         dataLabels: {
                             enabled: false,
                             color: '#000000'
-                        }
+                        },
+                        boostThreshold: 100,
+                        turboThreshold: Number.MAX_VALUE
+                        // colsize: 24 * 36e5, // one day
+                        // nullColor: '#EFEFEF'
                     }],
                     responsive: {
                         rules: [{
@@ -163,7 +170,7 @@
         </script>
 
         <figure class="highcharts-figure">
-            <div id="highcharts-container"></div>
+            <div id="highcharts-container" style="height: vsb_placeholder_heatmap_heightpx; width: vsb_placeholder_heatmap_widthpx; margin: 0 auto"></div>
         </figure>
     </body>
 </html>
