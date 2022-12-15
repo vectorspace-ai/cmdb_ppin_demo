@@ -64,7 +64,19 @@
                         type: 'heatmap',
                         marginTop: 40,
                         marginBottom: 80,
-                        plotBorderWidth: 1
+                        plotBorderWidth: 1,
+                        zoomType: 'xy',
+                        panning: {
+                            enabled: true, 
+                            type: 'xy'
+                        }
+                    },
+                    plotOptions: {
+                        heatmap: {
+                            label: {
+                                minFontSize: 1
+                            }
+                        }
                     },
                     boost: {
                         useGPUTranslations: true
@@ -73,23 +85,26 @@
                         text: 'Heatmap'
                     },
                     xAxis: {
-                        categories: column_labels
+                        categories: column_labels,
+                        title: null,
+                        panningEnabled: true,
+                        zoomEnabled: true,
+                        labels: {
+                            allowOverlap: true,
+                            step: 1
+                        }
                     },
                     yAxis: {
                         categories: rows,
                         title: null,
-                        reversed: true
-                    },
-                    accessibility: {
-                        point: {
-                            descriptionFormatter: function (point) {
-                                var ix = point.index + 1,
-                                    xName = getPointCategoryName(point, 'x'),
-                                    yName = getPointCategoryName(point, 'y'),
-                                    val = point.value;
-                                return ix + '. ' + xName + ' sales ' + yName + ', ' + val + '.';
-                            }
-                        }
+                        reversed: true,
+                        labels: {
+                            allowOverlap: true,
+                            step: 1
+                        },
+                        panningEnabled: true,
+                        zoomEnabled: true,
+
                     },
                     colorAxis: {
                         min: 0,
@@ -113,6 +128,7 @@
                         }
                     },
                     series: [{
+                        type: "heatmap",
                         name: 'Correlation scores',
                         borderWidth: 0,
                         data: correlation_scores,
@@ -121,7 +137,8 @@
                             color: '#000000'
                         },
                         boostThreshold: 100,
-                        turboThreshold: Number.MAX_VALUE
+                        turboThreshold: Number.MAX_VALUE,
+                        dataAsColumns: true
                     }],
                     responsive: {
                         rules: [{
@@ -156,7 +173,6 @@
                 document.body.append(script);
                 return script;
             }
-            // loadScript("http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js");
             loadScript("https://code.highcharts.com/highcharts.js");
             loadScript("https://code.highcharts.com/modules/heatmap.js");
             loadScript("https://code.highcharts.com/modules/exporting.js");
@@ -168,6 +184,7 @@
 
         <figure class="highcharts-figure">
             <div id="highcharts-container" style="height: vsb_placeholder_heatmap_heightpx; width: vsb_placeholder_heatmap_widthpx; margin: 0 auto"></div>
+            <p class="highcharts-heatmap-description" style="text-align: center;">Click and drag on the heatmap to zoom in.</p>
         </figure>
     </body>
 </html>
