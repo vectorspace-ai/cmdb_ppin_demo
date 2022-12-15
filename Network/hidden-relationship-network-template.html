@@ -47,9 +47,17 @@
     </head>
     <body>
         <script>
+            function getPointCategoryName(point, dimension) {
+                var series = point.series,
+                    isY = dimension === 'y',
+                    axis = series[isY ? 'yAxis' : 'xAxis'];
+                return axis.categories[point[isY ? 'y' : 'x']];
+            }
+
             function init() {
                 // Add the nodes here
                 let data = vsb_placeholder_nodes;
+                let mapping = vsb_placeholder_mapping;
 
                 let first_node = data[0][0];
 
@@ -71,37 +79,55 @@
                         ) {
                             var n = e.options.data;
                             var hr = e.options.hidden_relationships;
+                            var mp = e.options.mapping;
+
                             for (var i=0; i < n.length; i++) {
                                 var node = n[i];
+                                var key = (node[0]+"_"+node[1]).toUpperCase();
 
-                            var key = (node[0]+"_"+node[1]).toLowerCase();
-                            var hidden_relationship = hr[key];
-                            var clr = rel_colors[hidden_relationship];
+                                var node_mp = {'source_id': '', 'source_name': '', 'target_id': '', 'target_name': ''}
+                                if (key in mp) {
+                                    node_mp = mp[key];
+                                }
 
-                            if (clr == undefined) {
-                                clr = default_color;
-                            }
-                            
-                            if (node[0] === first_node) {
-                                nodes[first_node] = {
-                                    id: first_node,
-                                marker: {
-                                    radius: 20
-                                },
-                                color: clr
+                                var hidden_relationship = hr[key];
+                                var clr = rel_colors[hidden_relationship];
+
+                                if (clr == undefined) {
+                                    clr = default_color;
                                 }
-                                nodes[node[1]] = {
-                                    id: node[1],
-                                marker: {
-                                    radius: 10
-                                },
-                                color: clr
-                                }
-                            } else {
-                                    nodes[node[1]] = {
-                                    id: node[1],
-                                    color: clr
+                                
+                                if (node[0] === first_node) {
+                                    nodes[first_node] = {
+                                        id: first_node,
+                                        marker: {
+                                            radius: 20
+                                        },
+                                        color: clr
                                     }
+                                    nodes[node[1]] = {
+                                        id: node[1],
+                                        source_name: node_mp.source_name,
+                                        source_id: node_mp.source_id,
+                                        target_name: node_mp.target_name,
+                                        target_id: node_mp.target_id,
+                                        marker: {
+                                            radius: 10
+                                        },
+                                        color: clr
+                                    }
+                                } else {
+                                    if (!(node[1] in nodes)) {
+                                        nodes[node[1]] = {
+                                            id: node[1],
+                                            source_name: node_mp.source_name,
+                                            source_id: node_mp.source_id,
+                                            target_name: node_mp.target_name,
+                                            target_id: node_mp.target_id,
+                                            color: clr
+                                        }
+                                    }
+                                    
                                 }
                             }
                             e.options.nodes = Object.keys(nodes).map(function (id) {
@@ -126,11 +152,21 @@
                     },
                     plotOptions: {
                         networkgraph: {
+                            turboThreshold: 0,
                             keys: ['from', 'to'],
                             layoutAlgorithm: {
                                 enableSimulation: true,
-                                friction: -0.9
+                                friction: -0.9,
+                                approximation: true,
                             }
+                        }
+                    },
+                    tooltip: {
+                        formatter: function () {
+                            if (this.point.source_name === "" || this.point.source_name === undefined) {
+                                return "";
+                            }
+                            return "Source: " + this.point.source_name + " (" + this.point.source_id + ")\nTarget: " + this.point.target_name + " (" + this.point.target_id + ")";
                         }
                     },
                     series: [{
@@ -143,7 +179,8 @@
                         },
                         id: 'lang-tree',
                         data: data,
-                        hidden_relationships: hidden_relationships
+                        hidden_relationships: hidden_relationships,
+                        mapping: mapping
                     }]
                 });
             }
@@ -167,7 +204,7 @@
         <figure class="highcharts-figure">
             <div id="highcharts-container"></div>
             <p class="highcharts-description">
-                This force directed graph shows an example of a hidden relationship network where blue represents known relationships and yellow hidden relationships.
+                This force directed graph shows an example of a hidden relationship network where teal represents known relationships and yellow hidden relationships.
             </p>
         </figure>
     </body>
