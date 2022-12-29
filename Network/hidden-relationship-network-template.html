@@ -55,13 +55,16 @@
             }
 
             function init() {
-                // Add the nodes here
-                let data = vsb_placeholder_nodes;
+                // Nodes
+                let graph_nodes = vsb_placeholder_nodes;
+
+                // Protein name to ID mapping
                 let mapping = vsb_placeholder_mapping;
 
-                let first_node = data[0][0];
+                // Score and level
+                let data_mapping = vsb_placeholder_data_mapping;
 
-                //Add the hidden relationships here
+                // Hidden relationships
                 let hidden_relationships = vsb_placeholder_hidden_relationships;
 
                 // Leave as-is
@@ -70,70 +73,72 @@
                     'afterSetOptions',
                     function (e) {
                         var nodes = {};
-                        // Known and hidden relationships - Blue/yellow
+                        
                         let default_color = "#011230";
+                        // Known and hidden relationships - Blue/yellow
                         var rel_colors = ["#f4ee7f", "#729dad"];
-                        if (
-                            this instanceof Highcharts.Series.types.networkgraph &&
-                            e.options.id === 'lang-tree'
-                        ) {
-                            var n = e.options.data;
-                            var hr = e.options.hidden_relationships;
-                            var mp = e.options.mapping;
 
-                            for (var i=0; i < n.length; i++) {
-                                var node = n[i];
-                                var key = (node[0]+"_"+node[1]).toUpperCase();
+                        var n = e.options.data;
+                        var hr = e.options.hidden_relationships;
+                        var mp = e.options.mapping;
 
-                                var node_mp = {'source_id': '', 'source_name': '', 'target_id': '', 'target_name': ''}
-                                if (key in mp) {
-                                    node_mp = mp[key];
-                                }
+                        // This contains the score and level of each node
+                        var data_mp = e.options.data_mapping;
 
-                                var hidden_relationship = hr[key];
-                                var clr = rel_colors[hidden_relationship];
+                        for (var i=0; i < n.length; i++) {
+                            var node = n[i];
+                            var key = (node[0]+"_"+node[1]).toUpperCase();
 
-                                if (clr == undefined) {
-                                    clr = default_color;
-                                }
-                                
-                                if (node[0] === first_node) {
-                                    nodes[first_node] = {
-                                        id: first_node,
-                                        marker: {
-                                            radius: 20
-                                        },
-                                        color: clr
-                                    }
-                                    nodes[node[1]] = {
-                                        id: node[1],
-                                        source_name: node_mp.source_name,
-                                        source_id: node_mp.source_id,
-                                        target_name: node_mp.target_name,
-                                        target_id: node_mp.target_id,
-                                        marker: {
-                                            radius: 10
-                                        },
-                                        color: clr
-                                    }
-                                } else {
-                                    if (!(node[1] in nodes)) {
-                                        nodes[node[1]] = {
-                                            id: node[1],
-                                            source_name: node_mp.source_name,
-                                            source_id: node_mp.source_id,
-                                            target_name: node_mp.target_name,
-                                            target_id: node_mp.target_id,
-                                            color: clr
-                                        }
-                                    }
-                                    
+                            var node_mp = {'source_id': '', 'source_name': '', 'target_id': '', 'target_name': ''}
+                            if (key in mp) {
+                                node_mp = mp[key];
+                            }
+
+                            var hidden_relationship = hr[key];
+                            var clr = rel_colors[hidden_relationship];
+
+                            if (clr == undefined) {
+                                clr = default_color;
+                            }
+
+                            let node_level = data_mp[key]["level"];
+
+                            // Adjust the decrease as needed
+                            let first_node_radius = 20;
+                            var other_radius = 15 - node_level;
+                            if (other_radius < 5) {
+                                other_radius = 5;
+                            }
+
+                            if (node_level == 1) {
+                                nodes[node[0]] = {
+                                    id: node[0],
+                                    marker: {
+                                        radius: first_node_radius
+                                    },
+                                    color: default_color
                                 }
                             }
-                            e.options.nodes = Object.keys(nodes).map(function (id) {
-                                return nodes[id];
-                            });
+                            if (!(node[1] in nodes)) {
+                                nodes[node[1]] = {
+                                    id: node[1],
+                                    source_name: node_mp.source_name,
+                                    source_id: node_mp.source_id,
+                                    target_name: node_mp.target_name,
+                                    target_id: node_mp.target_id,
+                                    score: data_mp[key]["score"],
+                                    marker: {
+                                        radius: other_radius
+                                    },
+                                    color: clr
+                                }
+                            }
+                            
                         }
+
+                        e.options.nodes = Object.keys(nodes).map(function (id) {
+                            return nodes[id];
+                        });
                     }
                 );
 
@@ -152,21 +157,34 @@
                     },
                     plotOptions: {
                         networkgraph: {
-                            turboThreshold: 0,
+                            turboThreshold: 100,
                             keys: ['from', 'to'],
                             layoutAlgorithm: {
                                 enableSimulation: true,
-                                friction: -0.9,
-                                approximation: true,
+                                initialPositions: 'random',
+                                approximation: false,
+
+                                // Arguments for experimentation
+                                // friction: -0.9,
+                                // linkLength: 25,
+                                // gravitationalConstant: 1,
+
+                                // Functions for experimentation
+                                // repulsiveForce: function (d, k) { 
+                                //     return 1;
+                                // },
+                                // attractiveForce: function() {
+                                //     return 0;
+                                // }
                             }
                         }
                     },
                     tooltip: {
                         formatter: function () {
                             if (this.point.source_name === "" || this.point.source_name === undefined) {
-                                return "";
+                                return false;
                             }
-                            return "Source: " + this.point.source_name + " (" + this.point.source_id + ")\nTarget: " + this.point.target_name + " (" + this.point.target_id + ")";
+                            return "Source: " + this.point.source_name + " (" + this.point.source_id + ") - Target: " + this.point.target_name + " (" + this.point.target_id + ")" + "- Score: " + this.point.score;
                         }
                     },
                     series: [{
@@ -178,9 +196,10 @@
                             linkFormat: ''
                         },
                         id: 'lang-tree',
-                        data: data,
+                        data: graph_nodes,
                         hidden_relationships: hidden_relationships,
-                        mapping: mapping
+                        mapping: mapping,
+                        data_mapping: data_mapping
                     }]
                 });
             }
